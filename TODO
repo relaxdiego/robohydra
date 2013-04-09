@@ -1,0 +1,5 @@
+* Make tests work again
+* Multi-Hydra code, in particular how to get the "getCurrentUser" function
+* Cookie parsing code
+* Test names with spaces
+* Tests with parameters?
