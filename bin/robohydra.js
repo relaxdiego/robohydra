@@ -15,7 +15,9 @@ var robohydra = require('../lib/robohydra'),
     Request   = robohydra.Request,
     Response  = robohydra.Response;
 var RoboHydraPluginNotFoundException =
-        robohydra.RoboHydraPluginNotFoundException;
+        robohydra.RoboHydraPluginNotFoundException,
+    InvalidRoboHydraPluginException =
+        robohydra.InvalidRoboHydraPluginException;
 
 commander.version('0.3.0+').
     usage("mysetup.conf [confvar=value confvar2=value2 ...]").
@@ -34,7 +36,7 @@ function showHelpAndDie(message) {
 }
 
 
-function MultiHydra(pluginList, opts) {
+function MultiHydra(pluginDefList, opts) {
     this.extraVars = opts.extraVars || {};
     this.hydras = {};
     this._pluginLoadPath = ['robohydra/plugins',
@@ -44,11 +46,31 @@ function MultiHydra(pluginList, opts) {
     if (opts.extraPluginLoadPath) {
         this._pluginLoadPath.unshift(opts.extraPluginLoadPath);
     }
-    this.pluginList = this._initPlugins(pluginList);
+    this.pluginList = this._initPlugins(pluginDefList);
+    this.authenticatorFunction =
+        this._getAuthenticatorFunction(this.pluginList) ||
+        function() { return "*default*"; };
 }
-MultiHydra.prototype._initPlugins = function(pluginList) {
+MultiHydra.prototype._getAuthenticatorFunction = function(pluginList) {
+    var found = false, authenticatorFunction;
+    pluginList.forEach(function(pluginInfo) {
+        if ("getAuthenticationFunction" in pluginInfo.module) {
+            if (found) {
+                throw new InvalidRoboHydraPluginException();
+            } else {
+                found = true;
+                authenticatorFunction =
+                    pluginInfo.module.getAuthenticationFunction(
+                        pluginInfo.config
+                    );
+            }
+        }
+    });
+    return authenticatorFunction;
+};
+MultiHydra.prototype._initPlugins = function(pluginDefList) {
     var self = this;
-    return pluginList.map(function(pluginNameAndConfig) {
+    return pluginDefList.map(function(pluginNameAndConfig) {
         var pluginName   = pluginNameAndConfig[0],
             pluginConfig = pluginNameAndConfig[1],
             plugin;
@@ -64,10 +86,14 @@ MultiHydra.prototype._initPlugins = function(pluginList) {
             throw e;
         }
 
-        return {name: pluginName, module: plugin, config: pluginConfig};
+        plugin.name = pluginName;
+        plugin.config = pluginConfig;
+        return plugin;
     });
 };
-MultiHydra.prototype.getHydra = function(username) {
+MultiHydra.prototype.getHydraForRequest = function(req) {
+    var username = this.authenticatorFunction(req);
+
     if (! (username in this.hydras)) {
         this.hydras[username] = this._createHydra(username);
     }
@@ -79,16 +105,14 @@ MultiHydra.prototype._createHydra = function(username) {
 
     var self = this;
     this.pluginList.forEach(function(pluginInfo) {
-        hydra.registerPluginObject(pluginInfo.name,
-                                   pluginInfo.module,
-                                   pluginInfo.config);
+        hydra.registerPluginObject(pluginInfo);
     });
 
     return hydra;
 };
-// Return an object with keys 'name', 'module' and 'path'. It throws
-// an exception RoboHydraPluginNotFoundException if the plugin could
-// not be found.
+// Return an object with keys 'module' and 'path'. It throws an
+// exception RoboHydraPluginNotFoundException if the plugin could not
+// be found.
 MultiHydra.prototype.requirePlugin = function(name, opts) {
     opts = opts || {};
     var rootDir = opts.rootDir ? fs.realpathSync(opts.rootDir) : '';
@@ -119,20 +143,6 @@ MultiHydra.prototype.requirePlugin = function(name, opts) {
         throw new RoboHydraPluginNotFoundException(name);
     }
 };
-
-function getCurrentUser(req) {
-    if ('cookie' in req.headers) {
-        // TODO: what about cookies that contain a ";"?
-        var cookies = req.headers.cookie.split(/;\s*/);
-        for (var i = 0, len = cookies.length; i < len; i++) {
-            var nameAndValue = cookies[i].split('=');
-            if (nameAndValue[0] === 'user') {
-                return nameAndValue[1];
-            }
-        }
-    }
-    return "*default*";
-}
 
 
 // Process the options
@@ -182,7 +192,7 @@ var multihydra = new MultiHydra(pluginList,
 // This merely forces a default Hydra to be created. It's nice because
 // it forces plugins to be loaded, and we get plugin loading errors
 // early
-var hydra = multihydra.getHydra("*default*");
+var hydra = multihydra.getHydraForRequest(new Request({url: '/'}));
 
 function stringForLog(req, res) {
     var remoteAddr = req.socket && req.socket.remoteAddress || "-";
@@ -226,9 +236,7 @@ var requestHandler = function(nodeReq, nodeRes) {
             // It's ok if qs can't parse the body
         }
 
-        var currentUser = getCurrentUser(req);
-        requestHydra = multihydra.getHydra(currentUser);
-        requestHydra.handle(req, res);
+        multihydra.getHydraForRequest(req).handle(req, res);
     });
 };
 
