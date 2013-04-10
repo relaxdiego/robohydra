@@ -3,3 +3,7 @@
 * Cookie parsing code
 * Test names with spaces
 * Tests with parameters?
+* Clean up exceptions
+* Make InvalidRoboHydraPluginException accepts parameters
+* Create InvalidRoboHydraException or something?
+* Write tests for this whole MultiHydra mumbo-jumbo
