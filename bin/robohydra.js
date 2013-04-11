@@ -14,6 +14,7 @@ var robohydra = require('../lib/robohydra'),
     RoboHydra = robohydra.RoboHydra,
     Request   = robohydra.Request,
     Response  = robohydra.Response;
+var MultiHydra = require('../lib/multihydra').MultiHydra;
 var RoboHydraPluginNotFoundException =
         robohydra.RoboHydraPluginNotFoundException,
     InvalidRoboHydraPluginException =
@@ -34,115 +35,6 @@ function showHelpAndDie(message) {
     console.log(commander.helpInformation());
     process.exit(1);
 }
-
-
-function MultiHydra(pluginDefList, opts) {
-    this.extraVars = opts.extraVars || {};
-    this.hydras = {};
-    this._pluginLoadPath = ['robohydra/plugins',
-                            'node_modules/robohydra/plugins',
-                            '/usr/local/share/robohydra/plugins',
-                            '/usr/share/robohydra/plugins'];
-    if (opts.extraPluginLoadPath) {
-        this._pluginLoadPath.unshift(opts.extraPluginLoadPath);
-    }
-    this.pluginList = this._initPlugins(pluginDefList);
-    this.authenticatorFunction =
-        this._getAuthenticatorFunction(this.pluginList) ||
-        function() { return "*default*"; };
-}
-MultiHydra.prototype._getAuthenticatorFunction = function(pluginList) {
-    var found = false, authenticatorFunction;
-    pluginList.forEach(function(pluginInfo) {
-        if ("getAuthenticationFunction" in pluginInfo.module) {
-            if (found) {
-                throw new InvalidRoboHydraPluginException();
-            } else {
-                found = true;
-                authenticatorFunction =
-                    pluginInfo.module.getAuthenticationFunction(
-                        pluginInfo.config
-                    );
-            }
-        }
-    });
-    return authenticatorFunction;
-};
-MultiHydra.prototype._initPlugins = function(pluginDefList) {
-    var self = this;
-    return pluginDefList.map(function(pluginNameAndConfig) {
-        var pluginName   = pluginNameAndConfig[0],
-            pluginConfig = pluginNameAndConfig[1],
-            plugin;
-
-        try {
-            plugin = self.requirePlugin(pluginName);
-        } catch(e) {
-            if (e instanceof RoboHydraPluginNotFoundException) {
-                console.log("Could not find or load plugin '"+pluginName+"'");
-            } else {
-                console.log("Unknown error loading plugin '"+pluginName+"'");
-            }
-            throw e;
-        }
-
-        plugin.name = pluginName;
-        plugin.config = pluginConfig;
-        return plugin;
-    });
-};
-MultiHydra.prototype.getHydraForRequest = function(req) {
-    var username = this.authenticatorFunction(req);
-
-    if (! (username in this.hydras)) {
-        this.hydras[username] = this._createHydra(username);
-    }
-
-    return this.hydras[username];
-};
-MultiHydra.prototype._createHydra = function(username) {
-    var hydra = new RoboHydra(this.extraVars);
-
-    var self = this;
-    this.pluginList.forEach(function(pluginInfo) {
-        hydra.registerPluginObject(pluginInfo);
-    });
-
-    return hydra;
-};
-// Return an object with keys 'module' and 'path'. It throws an
-// exception RoboHydraPluginNotFoundException if the plugin could not
-// be found.
-MultiHydra.prototype.requirePlugin = function(name, opts) {
-    opts = opts || {};
-    var rootDir = opts.rootDir ? fs.realpathSync(opts.rootDir) : '';
-    var plugin = {};
-    var stat, fullPath;
-    for (var i = 0, len = this._pluginLoadPath.length; i < len; i++) {
-        try {
-            fullPath = rootDir +
-                (this._pluginLoadPath[i].indexOf('/') !== 0 ?
-                     fs.realpathSync('.') + '/' : '') +
-                this._pluginLoadPath[i] + '/' + name;
-            stat = fs.statSync(fullPath);
-        } catch (e) {
-            // It's ok if the plugin is not in this directory
-            if (e.code !== 'ENOENT') {
-                throw e;
-            }
-        }
-        if (stat && stat.isDirectory()) {
-            plugin.module = require(fullPath);
-            break;
-        }
-    }
-    if (plugin.module) {
-        plugin.path = fullPath;
-        return plugin;
-    } else {
-        throw new RoboHydraPluginNotFoundException(name);
-    }
-};
 
 
 // Process the options
