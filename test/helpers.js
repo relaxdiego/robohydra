@@ -220,10 +220,28 @@ function headWithFail(path, hydraUtils, assertionMessage) {
     });
 }
 
-exports.withResponse    = withResponse;
-exports.checkRouting    = checkRouting;
-exports.fakeFs          = fakeFs;
-exports.fakeHttpRequest = fakeHttpRequest;
-exports.simpleReq       = simpleReq;
-exports.headWithFail    = headWithFail;
-exports.headWithPass    = headWithPass;
+function pluginInfoObject(info) {
+    name = ('name' in info) ? info.name : 'test-plugin';
+    return {
+        name: name,
+        path: info.path || '/tmp/fake/unit-testing/' + name,
+        config: info.config || {},
+        module: {
+            getBodyParts: function() {
+                return {
+                    heads: info.heads || [],
+                    tests: info.tests || []
+                };
+            }
+        }
+    };
+}
+
+exports.withResponse     = withResponse;
+exports.checkRouting     = checkRouting;
+exports.fakeFs           = fakeFs;
+exports.fakeHttpRequest  = fakeHttpRequest;
+exports.simpleReq        = simpleReq;
+exports.headWithFail     = headWithFail;
+exports.headWithPass     = headWithPass;
+exports.pluginInfoObject = pluginInfoObject;
