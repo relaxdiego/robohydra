@@ -1,8 +1,4 @@
-* Make tests work again
 * Test names with spaces
 * Tests with parameters?
-* Make InvalidRoboHydraPluginException accepts parameters
-* Create InvalidRoboHydraException or something?
-* Write tests for this whole MultiHydra mumbo-jumbo
 * Improve logger, add a head for a web interface to inspect the log?
 * Allow the user to use a specific authenticator, when there's more than one?
