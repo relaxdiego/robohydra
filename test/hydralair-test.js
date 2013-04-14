@@ -5,6 +5,25 @@ var HydraLair = require('../lib/hydralair').HydraLair;
 
 buster.spec.expose();
 
+describe("Authenticator system", function() {
+    "use strict";
+
+    it("detects multiple authenticators and fails to load", function() {
+        expect(function() {
+            new HydraLair(
+                [{name: 'simple-authenticator', config: {}},
+                 {name: 'url-query-authenticator', config: {}}],
+                {rootDir: __dirname + '/plugin-fs'}
+            );
+        // TODO:
+        // THERE SHOULD BE A BETTER EXCEPTION HERE
+        }).toThrow('RoboHydraPluginNotFoundException');
+    });
+
+    // Not having any authenticator is fine, always return "*default*"
+    // getAuthenticator doesn't return a function
+});
+
 describe("Plugin loader", function() {
     "use strict";
 
