@@ -15,9 +15,7 @@ describe("Authenticator system", function() {
                  {name: 'url-query-authenticator', config: {}}],
                 {rootDir: __dirname + '/plugin-fs'}
             );
-        // TODO:
-        // THERE SHOULD BE A BETTER EXCEPTION HERE
-        }).toThrow('RoboHydraPluginNotFoundException');
+        }).toThrow('InvalidRoboHydraConfigurationException');
     });
 
     // Not having any authenticator is fine, always return "*default*"
