@@ -38,9 +38,9 @@ var HydraLair = require('../lib/hydralair').HydraLair;
 
 
     // Process the options
-    var extraPluginLoadPath;
+    var extraPluginLoadPath = [];
     if (commander.I) {
-        extraPluginLoadPath = commander.I;
+        extraPluginLoadPath.push(commander.I);
     }
     // Check parameters and load RoboHydra configuration
     if (commander.args.length < 1) {
@@ -80,7 +80,7 @@ var HydraLair = require('../lib/hydralair').HydraLair;
 
     var lair = new HydraLair(pluginList,
                              {extraVars: extraVars,
-                              extraPluginLoadPaths: [extraPluginLoadPath]});
+                              extraPluginLoadPaths: extraPluginLoadPath});
     // This merely forces a default Hydra to be created. It's nice because
     // it forces plugins to be loaded, and we get plugin loading errors
     // early
