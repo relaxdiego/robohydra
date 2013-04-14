@@ -8,7 +8,7 @@ buster.spec.expose();
 describe("Plugin loader", function() {
     "use strict";
 
-    it("fail when loading non-existent plugins", function() {
+    it("fails when loading non-existent plugins", function() {
         expect(function() {
             new HydraLair(
                 [{name: 'i-dont-exist', config: {}}],
