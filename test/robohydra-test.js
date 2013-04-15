@@ -131,7 +131,7 @@ describe("RoboHydras", function() {
         expect(hydra).toHavePluginWithHeadcount('simple_plugin', 1);
         expect(function() {
             hydra.registerPluginObject(pluginInfoObject(plugin2));
-        }).toThrow("DuplicateRoboHydraPluginException");
+        }).toThrow("InvalidRoboHydraConfigurationException");
     });
 
     it("can register several plugins", function() {
