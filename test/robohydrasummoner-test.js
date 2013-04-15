@@ -35,7 +35,15 @@ describe("RoboHydra picking system", function() {
         expect(hydra2.randomProperty).toEqual(seen);
     });
 
-    // getAuthenticator doesn't return a function
+    it("rejects pickers that are not functions", function() {
+        expect(function() {
+            var summoner = new RoboHydraSummoner(
+                [{name: 'wrong-fixed-picker', config: {}}],
+                {rootDir: __dirname + '/plugin-fs'}
+            );
+            summoner.summonRoboHydraForRequest(new Request({url: '/'}));
+        }).toThrow('InvalidRoboHydraPluginException');
+    });
 
     it("picks the right RoboHydra", function() {
         var summoner = new RoboHydraSummoner(
