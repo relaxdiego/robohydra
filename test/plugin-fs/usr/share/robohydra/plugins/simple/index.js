@@ -14,7 +14,7 @@ exports.getBodyParts = function(conf) {
             new RoboHydraHeadStatic({
                 name: conf.configKey,
                 path: '/conf/configKey',
-                content: conf.configKey
+                content: conf.configKey || 'empty'
             })
         ]
     };

@@ -13,7 +13,7 @@ var http      = require('http'),
 var robohydra = require('../lib/robohydra'),
     Request   = robohydra.Request,
     Response  = robohydra.Response;
-var HydraLair = require('../lib/hydralair').HydraLair;
+var RoboHydraSummoner = require('../lib/robohydrasummoner').RoboHydraSummoner;
 
 
 (function () {
@@ -78,13 +78,14 @@ var HydraLair = require('../lib/hydralair').HydraLair;
         return {name: pluginName, config: pluginConfig};
     });
 
-    var lair = new HydraLair(pluginList,
-                             {extraVars: extraVars,
-                              extraPluginLoadPaths: extraPluginLoadPath});
+    var summoner = new RoboHydraSummoner(
+        pluginList,
+        {extraVars: extraVars, extraPluginLoadPaths: extraPluginLoadPath}
+    );
     // This merely forces a default Hydra to be created. It's nice because
     // it forces plugins to be loaded, and we get plugin loading errors
     // early
-    lair.getHydraForRequest(new Request({url: '/'}));
+    summoner.summonRoboHydraForRequest(new Request({url: '/'}));
 
     function stringForLog(req, res) {
         var remoteAddr = req.socket && req.socket.remoteAddress || "-";
@@ -128,7 +129,7 @@ var HydraLair = require('../lib/hydralair').HydraLair;
                 // It's ok if qs can't parse the body
             }
 
-            lair.getHydraForRequest(req).handle(req, res);
+            summoner.summonRoboHydraForRequest(req).handle(req, res);
         });
     };
 

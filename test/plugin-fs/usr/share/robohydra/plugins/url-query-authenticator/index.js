@@ -12,8 +12,10 @@ exports.getBodyParts = function(conf) {
     };
 };
 
-exports.getAuthenticationFunction = function() {
-    return function(req) {
-        return req.queryParams.user || "no-user-query-param";
+exports.getSummonerTraits = function() {
+    return {
+        robohydraPicker: function(req) {
+            return req.queryParams.user || "no-user-query-param";
+        }
     };
 };

@@ -12,8 +12,10 @@ exports.getBodyParts = function(conf) {
     };
 };
 
-exports.getAuthenticationFunction = function() {
-    return function() {
-        return "simple-authenticator-fixed-user";
+exports.getSummonerTraits = function() {
+    return {
+        robohydraPicker: function() {
+            return "simple-authenticator-fixed-user";
+        }
     };
 };
