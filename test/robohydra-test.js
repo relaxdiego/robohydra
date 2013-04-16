@@ -120,6 +120,16 @@ describe("RoboHydras", function() {
         expect(hydra).toHavePluginList(['simple_plugin']);
     });
 
+    it("can register plugins with one head and one test", function() {
+        var hydra = new RoboHydra();
+        hydra.registerPluginObject(pluginInfoObject({
+            name: 'simple_plugin',
+            heads: [simpleRoboHydraHead()],
+            tests: {simpleTest:{}}
+        }));
+        expect(hydra).toHavePluginList(['simple_plugin']);
+    });
+
     it("can't register two plugins with the same name", function() {
         var hydra = new RoboHydra();
         var plugin1 = {name: 'simple_plugin',

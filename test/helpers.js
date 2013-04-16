@@ -225,16 +225,22 @@ var robohydra = require("../lib/robohydra"),
 
     function pluginInfoObject(info) {
         var name = ('name' in info) ? info.name : 'test-plugin';
+
+        var bodyParts = {};
+        if (info.heads) {
+            bodyParts.heads = info.heads;
+        }
+        if (info.tests) {
+            bodyParts.tests = info.tests;
+        }
+
         return {
             name: name,
             path: info.path || '/tmp/fake/unit-testing/' + name,
             config: info.config || {},
             module: {
                 getBodyParts: function() {
-                    return {
-                        heads: info.heads || [],
-                        tests: info.tests || []
-                    };
+                    return bodyParts;
                 }
             }
         };
